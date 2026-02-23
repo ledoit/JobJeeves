@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: jobjeeves
+      POSTGRES_PASSWORD: jobjeeves
+      POSTGRES_DB: jobjeeves
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://jobjeeves:jobjeeves@db:5432/jobjeeves
+      LLM_PROVIDER: ${LLM_PROVIDER:-groq}
+
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+
+      # Groq
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    environment:
+      # Important: inside Docker, "localhost" is the frontend container; use the backend service name.
+      # Force this so it works even if you have VITE_API_BASE_URL set in a host .env for local (non-docker) dev.
+      VITE_API_BASE_URL: http://backend:8000
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    command: sh -lc "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+
+volumes:
+  db_data:
+

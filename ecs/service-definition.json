@@ -1,0 +1,25 @@
+{
+  "serviceName": "jobjeeves-backend-service",
+  "cluster": "jobjeeves-cluster",
+  "taskDefinition": "jobjeeves-backend",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": [
+        "subnet-xxxxxxxxxxxxxxxxx"
+      ],
+      "securityGroups": [
+        "sg-xxxxxxxxxxxxxxxxx"
+      ],
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "loadBalancer": {
+    "targetGroupArn": "arn:aws:elasticloadbalancing:REGION:YOUR_ACCOUNT_ID:targetgroup/jobjeeves-backend/xxxxxxxxxxxxx",
+    "containerName": "jobjeeves-backend",
+    "containerPort": 8000
+  },
+  "healthCheckGracePeriodSeconds": 60,
+  "enableExecuteCommand": true
+}

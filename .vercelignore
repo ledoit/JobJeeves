@@ -1,0 +1,41 @@
+# Backend files
+backend/
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker files
+docker-compose.yml
+Dockerfile
+*.dockerfile
+
+# Environment files (Vercel uses its own env vars)
+.env
+.env.local
+.env.*.local
+env.sample
+
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Temporary files
+tmp_*.pdf
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional - uncomment if you don't want to deploy README)
+# README.md

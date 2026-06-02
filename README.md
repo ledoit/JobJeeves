@@ -4,9 +4,9 @@
 
 - **Upload PDF resume**
 - **Extract text**
-- **Compare vs job description (OpenAI)**
-- **Return**: match score, missing keywords, improvement suggestions
-- **Store results** in PostgreSQL
+- **Compare vs job description** (default **Groq** via OpenAI-compatible API; optional OpenAI)
+- **Return**: match score, missing keywords, strengths, short summary, improvement suggestions
+- **Store results** in PostgreSQL (Docker) or SQLite (`dev.db` locally)
 
 ## Quickstart (Docker)
 
@@ -29,31 +29,51 @@ docker compose up --build
 - Frontend: `http://localhost:5173`
 - Backend health: `http://localhost:8000/api/health`
 
-## Local dev (no Docker)
+## Local dev (no Docker, one-liner)
 
-Backend (defaults to SQLite `dev.db`):
+From repo root:
 
 ```bash
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -r backend/requirements.txt
-cd backend
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+npm run dev
 ```
 
-Frontend:
+This command will:
+- install frontend dependencies
+- create `.venv` if missing
+- install backend Python requirements
+- create `.env` from `env.sample` if missing
+- start backend on `127.0.0.1:8000` and frontend on `127.0.0.1:5173`
+
+If you only want setup (without starting servers):
 
 ```bash
-cd frontend
-npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run setup
+```
+
+Optional split commands:
+
+```bash
+npm run dev:backend
+npm run dev:frontend
 ```
 
 ## API
 
 - `POST /api/analyze` (multipart/form-data)
   - `file`: PDF
-  - `job_description`: string
+  - `job_description`: string (optional; if omitted/empty, runs resume-only mode)
+- `GET /api/health` — health check
+- `GET /api/analyses/{id}` — fetch stored analysis by id
+
+## Deployment options
+
+| Target | Doc |
+|--------|-----|
+| Docker Compose (local full stack) | This README — Quickstart |
+| Vercel frontend + external API | [README-vercel.md](./README-vercel.md) — use `VITE_API_URL` in production |
+| AWS ECS + Supabase | [README-ecs-supabase.md](./README-ecs-supabase.md) |
+
+**Env naming:** `VITE_API_BASE_URL` is for local Vite dev (proxy to backend). Production Vercel builds use **`VITE_API_URL`** (see `frontend/src/api.ts`).
 
 ## Notes / Limitations
 

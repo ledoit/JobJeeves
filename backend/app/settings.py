@@ -1,8 +1,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+
+
+ROOT_ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=(str(ROOT_ENV_FILE), ".env"), extra="ignore")
 
     database_url: str = "sqlite:///./dev.db"
     llm_provider: str = "groq"  # "groq" or "openai"

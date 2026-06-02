@@ -1,0 +1,12 @@
+{
+  "name": "jobjeeves",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JobJeeves local dev orchestrator",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:backend": "node scripts/run-backend.mjs",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173"
+  }
+}

@@ -1,16 +1,34 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { analyzeResume, type AnalyzeResponse } from "./api";
 
 export default function App() {
   const [pdf, setPdf] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [analysisSource, setAnalysisSource] = useState<"groq" | "openai" | "local_heuristic">("groq");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const hasJobDescription = jobDescription.trim().length > 0;
+  const sourceOptions = hasJobDescription
+    ? ([
+        { value: "groq", label: "Groq (JD mode)" },
+        { value: "openai", label: "OpenAI (JD mode)" },
+      ] as const)
+    : ([
+        { value: "groq", label: "Groq (resume-only)" },
+        { value: "openai", label: "OpenAI (resume-only)" },
+        { value: "local_heuristic", label: "Local heuristic (resume-only, no API)" },
+      ] as const);
 
   const canSubmit = useMemo(() => {
-    return !!pdf && jobDescription.trim().length >= 20 && !loading;
-  }, [pdf, jobDescription, loading]);
+    return !!pdf && !loading;
+  }, [pdf, loading]);
+
+  useEffect(() => {
+    if (hasJobDescription && analysisSource === "local_heuristic") {
+      setAnalysisSource("groq");
+    }
+  }, [analysisSource, hasJobDescription]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,7 +37,7 @@ export default function App() {
     setError(null);
     setResult(null);
     try {
-      const r = await analyzeResume({ pdf, jobDescription });
+      const r = await analyzeResume({ pdf, jobDescription, analysisSource });
       setResult(r);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -34,8 +52,8 @@ export default function App() {
         <div>
           <h1>JobJeeves</h1>
           <p className="sub">
-            Upload your resume PDF, paste a job description, and get a match
-            score + missing keywords + improvements.
+            Upload your resume PDF and optionally paste a job description.
+            Get either a job-match analysis or a resume-only review.
           </p>
         </div>
       </header>
@@ -55,18 +73,35 @@ export default function App() {
             </label>
 
             <label className="label">
-              Job description
+              Job description (optional)
               <textarea
                 className="textarea"
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="Paste the full job description here..."
+                placeholder="Paste the full job description here (or leave blank for resume-only mode)..."
                 rows={10}
               />
             </label>
 
+            <label className="label">
+              Analysis source
+              <select
+                className="input"
+                value={analysisSource}
+                onChange={(e) =>
+                  setAnalysisSource(e.target.value as "groq" | "openai" | "local_heuristic")
+                }
+              >
+                {sourceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <button className="button" disabled={!canSubmit} type="submit">
-              {loading ? "Analyzing..." : "Analyze match"}
+              {loading ? "Analyzing..." : "Analyze resume"}
             </button>
 
             {error ? <div className="error">{error}</div> : null}
@@ -82,8 +117,14 @@ export default function App() {
               <div className="scoreRow">
                 <div className="score">{result.match_score}</div>
                 <div>
-                  <div className="scoreLabel">Match score (0–100)</div>
-                  <div className="muted">Analysis ID: {result.analysis_id}</div>
+                  <div className="scoreLabel">
+                    {result.analysis_mode === "resume_only"
+                      ? "Resume readiness score (0–100)"
+                      : "Match score (0–100)"}
+                  </div>
+                  <div className="muted">
+                    Analysis ID: {result.analysis_id} · Engine: {result.analysis_engine}
+                  </div>
                 </div>
               </div>
 
@@ -96,7 +137,11 @@ export default function App() {
 
               <div className="cols">
                 <div className="block">
-                  <h3>Missing keywords</h3>
+                  <h3>
+                    {result.analysis_mode === "resume_only"
+                      ? "Potentially missing/underemphasized keywords"
+                      : "Missing keywords"}
+                  </h3>
                   {result.missing_keywords.length ? (
                     <ul>
                       {result.missing_keywords.map((k) => (

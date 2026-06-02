@@ -36,7 +36,8 @@ def health():
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
 async def analyze(
-    job_description: str = Form(...),
+    job_description: str = Form(""),
+    analysis_source: str = Form("auto"),
     file: UploadFile = File(...),
     session: Session = Depends(get_session),
 ):
@@ -49,7 +50,12 @@ async def analyze(
         raise HTTPException(status_code=400, detail="Could not extract text from PDF (is it scanned/image-only?).")
 
     try:
-        result = analyze_resume_vs_job(resume_text=resume_text, job_description=job_description)
+        normalized_job_description = job_description.strip()
+        result = analyze_resume_vs_job(
+            resume_text=resume_text,
+            job_description=normalized_job_description,
+            analysis_source=analysis_source,
+        )
     except RuntimeError as e:
         # Configuration problems (missing API keys, etc.)
         raise HTTPException(status_code=400, detail=str(e))
@@ -78,6 +84,8 @@ async def analyze(
     return AnalyzeResponse(
         analysis_id=analysis.id,
         match_score=analysis.match_score or 0,
+        analysis_mode=str(result.get("analysis_mode") or ("resume_only" if not normalized_job_description else "job_match")),
+        analysis_engine=str(result.get("analysis_engine") or settings.llm_provider or "groq"),
         missing_keywords=list(result.get("missing_keywords") or []),
         improvement_suggestions=list(result.get("improvement_suggestions") or []),
         strengths=list(result.get("strengths") or []),

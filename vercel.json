@@ -9,5 +9,13 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "jobjeeves.vercel.app" }],
+      "destination": "https://jobjeeves.menhir-holdings.com/:path*",
+      "permanent": true
+    }
   ]
 }

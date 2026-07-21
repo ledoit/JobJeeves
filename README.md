@@ -79,3 +79,8 @@ npm run dev:frontend
 
 - **Scanned PDFs** (images) usually won’t extract text without OCR.
 
+
+
+## License
+
+All Rights Reserved © Menhir Holdings

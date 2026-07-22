@@ -70,7 +70,7 @@ npm run dev:frontend
 | Target | Doc |
 |--------|-----|
 | Docker Compose (local full stack) | This README — Quickstart |
-| **Vercel (frontend + FastAPI, recommended prod)** | `pyproject.toml` + `vercel.json` — same-origin `/api/*` |
+| **Vercel (frontend + `/api` serverless)** | `api/index.py` + root `requirements.txt` — same-origin `/api/*` |
 | Vercel frontend + external API | [README-vercel.md](./README-vercel.md) — legacy split deploy |
 | AWS ECS + Supabase | [README-ecs-supabase.md](./README-ecs-supabase.md) |
 

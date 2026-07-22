@@ -14,5 +14,6 @@ class AnalyzeResponse(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     short_summary: str = ""
     resume_text: str = ""
+    tailored_resume: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
 

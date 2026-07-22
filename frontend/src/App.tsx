@@ -14,6 +14,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [savedHint, setSavedHint] = useState<string | null>(null);
+  const [exportHint, setExportHint] = useState<string | null>(null);
 
   const hasJobDescription = jobDescription.trim().length > 0;
   const sourceOptions = hasJobDescription
@@ -72,6 +73,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setExportHint(null);
     try {
       const r = await analyzeResume({
         pdf: resumeMode === "upload" ? pdf : null,
@@ -99,6 +101,34 @@ export default function App() {
     setResumeMode("upload");
     setSavedHint(null);
   }
+
+  async function copyTailoredResume(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setExportHint("Tailored resume copied to clipboard.");
+    } catch {
+      setExportHint("Could not copy to clipboard — try download instead.");
+    }
+  }
+
+  function downloadTailoredResume(text: string) {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "tailored-resume.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setExportHint("Download started.");
+  }
+
+  const submitLabel = hasJobDescription
+    ? loading
+      ? "Tailoring..."
+      : "Analyze & tailor"
+    : loading
+      ? "Analyzing..."
+      : "Analyze resume";
 
   return (
     <div className="page">
@@ -186,7 +216,7 @@ export default function App() {
             </label>
 
             <button className="button" disabled={!canSubmit} type="submit">
-              {loading ? "Analyzing..." : "Analyze resume"}
+              {submitLabel}
             </button>
 
             {error ? <div className="error">{error}</div> : null}
@@ -264,6 +294,34 @@ export default function App() {
                   <p className="muted">No suggestions returned.</p>
                 )}
               </div>
+
+              {result.tailored_resume?.trim() ? (
+                <div className="block">
+                  <div className="blockHeader">
+                    <h3>Tailored resume</h3>
+                    <div className="actionRow">
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => copyTailoredResume(result.tailored_resume ?? "")}
+                      >
+                        Copy
+                      </button>
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => downloadTailoredResume(result.tailored_resume ?? "")}
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                  {exportHint ? <p className="hint">{exportHint}</p> : null}
+                  <pre className="tailorOutput">{result.tailored_resume}</pre>
+                </div>
+              ) : result.analysis_mode === "job_match" ? (
+                <p className="muted">No tailored resume returned for this run.</p>
+              ) : null}
             </div>
           )}
         </section>

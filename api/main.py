@@ -6,12 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
 from sqlmodel import Session, select
 
-from app.db import create_db_and_tables, get_session
-from app.models import Analysis
-from app.openai_analyzer import analyze_resume_vs_job
-from app.pdf import extract_text_from_pdf
-from app.schemas import AnalyzeResponse
-from app.settings import settings
+from db import create_db_and_tables, get_session
+from models import Analysis
+from openai_analyzer import analyze_resume_vs_job
+from pdf import extract_text_from_pdf
+from schemas import AnalyzeResponse
+from settings import settings
 
 
 app = FastAPI(title="JobJeeves API")

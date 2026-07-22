@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session
 
-from app.settings import settings
+from settings import settings
 
 
 connect_args = {}

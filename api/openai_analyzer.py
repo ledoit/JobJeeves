@@ -4,7 +4,7 @@ from typing import Any
 
 from openai import OpenAI
 
-from app.settings import settings
+from settings import settings
 
 
 SYSTEM_PROMPT = """You are an ATS-style resume evaluator.

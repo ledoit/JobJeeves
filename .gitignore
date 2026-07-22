@@ -23,7 +23,3 @@ Thumbs.db
 
 .vercel
 .env*
-
-# Vercel static output (built from frontend/dist)
-public/**
-!public/.gitkeep

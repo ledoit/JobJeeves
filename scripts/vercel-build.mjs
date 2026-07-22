@@ -3,16 +3,17 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
-const apiBackend = join(root, "api", "backend");
+const publicDir = join(root, "public");
 
-rmSync(apiBackend, { recursive: true, force: true });
-mkdirSync(apiBackend, { recursive: true });
-cpSync(join(root, "backend"), apiBackend, { recursive: true });
-console.log("copied backend -> api/backend");
+rmSync(publicDir, { recursive: true, force: true });
+mkdirSync(publicDir, { recursive: true });
 
 const build = spawnSync("npm", ["run", "build"], {
   cwd: join(root, "frontend"),
   stdio: "inherit",
   shell: true,
 });
-process.exit(build.status ?? 1);
+if ((build.status ?? 1) !== 0) process.exit(build.status ?? 1);
+
+cpSync(join(root, "frontend", "dist"), publicDir, { recursive: true });
+console.log("copied frontend/dist -> public/");

@@ -24,6 +24,6 @@ Thumbs.db
 .vercel
 .env*
 
-# Vercel build copies backend here for serverless bundle
-api/backend/**
-!api/backend/.gitkeep
+# Vercel static output (built from frontend/dist)
+public/**
+!public/.gitkeep

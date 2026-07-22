@@ -1,11 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd frontend && npm ci && npm run build",
+  "buildCommand": "cp -r backend api/backend && cd frontend && npm ci && npm run build",
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/**/*.py": {
-      "maxDuration": 60,
-      "includeFiles": "backend/**"
+      "maxDuration": 60
     }
   },
   "rewrites": [

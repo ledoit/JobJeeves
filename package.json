@@ -7,7 +7,8 @@
     "setup": "node scripts/setup.mjs",
     "dev": "node scripts/dev.mjs",
     "dev:backend": "node scripts/run-backend.mjs",
-    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173"
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173",
+    "vercel-build": "node scripts/vercel-build.mjs"
   },
   "license": "UNLICENSED"
 }

@@ -7,22 +7,28 @@ export type AnalyzeResponse = {
   improvement_suggestions: string[];
   strengths: string[];
   short_summary: string;
+  resume_text?: string;
 };
 
 export async function analyzeResume(params: {
-  pdf: File;
+  pdf?: File | null;
+  resumeText?: string;
   jobDescription?: string;
   analysisSource?: "groq" | "openai" | "local_heuristic";
 }): Promise<AnalyzeResponse> {
   const form = new FormData();
-  form.append("file", params.pdf);
+  const pasted = params.resumeText?.trim() ?? "";
+  if (params.pdf) {
+    form.append("file", params.pdf);
+  }
+  if (pasted) {
+    form.append("resume_text", pasted);
+  }
   form.append("job_description", params.jobDescription?.trim() ?? "");
   if (params.analysisSource) {
     form.append("analysis_source", params.analysisSource);
   }
 
-  // Use VITE_API_URL environment variable for production (Vercel)
-  // Falls back to /api for local dev with Vite proxy
   const apiUrl = import.meta.env.VITE_API_URL || "";
   const endpoint = apiUrl ? `${apiUrl}/api/analyze` : "/api/analyze";
 
@@ -36,4 +42,3 @@ export async function analyzeResume(params: {
   }
   return (await res.json()) as AnalyzeResponse;
 }
-

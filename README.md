@@ -70,8 +70,13 @@ npm run dev:frontend
 | Target | Doc |
 |--------|-----|
 | Docker Compose (local full stack) | This README — Quickstart |
-| Vercel frontend + external API | [README-vercel.md](./README-vercel.md) — use `VITE_API_URL` in production |
+| **Vercel (frontend + FastAPI, recommended prod)** | `pyproject.toml` + `vercel.json` — same-origin `/api/*` |
+| Vercel frontend + external API | [README-vercel.md](./README-vercel.md) — legacy split deploy |
 | AWS ECS + Supabase | [README-ecs-supabase.md](./README-ecs-supabase.md) |
+
+**Production:** https://jobjeeves.menhir-holdings.com — see [docs/HAPPY_PATH.md](./docs/HAPPY_PATH.md).
+
+**Env (Vercel):** `GROQ_API_KEY` or `OPENAI_API_KEY`, optional `DATABASE_URL=sqlite:////tmp/jobjeeves.db`, `CORS_ORIGINS` if needed.
 
 **Env naming:** `VITE_API_BASE_URL` is for local Vite dev (proxy to backend). Production Vercel builds use **`VITE_API_URL`** (see `frontend/src/api.ts`).
 

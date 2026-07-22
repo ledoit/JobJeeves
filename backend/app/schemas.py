@@ -13,5 +13,6 @@ class AnalyzeResponse(BaseModel):
     improvement_suggestions: list[str]
     strengths: list[str] = Field(default_factory=list)
     short_summary: str = ""
+    resume_text: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
 

@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { analyzeResume, type AnalyzeResponse } from "./api";
+import { clearBaseResume, loadBaseResume, saveBaseResume } from "./baseResume";
+
+type ResumeMode = "upload" | "paste";
 
 export default function App() {
+  const [resumeMode, setResumeMode] = useState<ResumeMode>("upload");
   const [pdf, setPdf] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [analysisSource, setAnalysisSource] = useState<"groq" | "openai" | "local_heuristic">("groq");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const [savedHint, setSavedHint] = useState<string | null>(null);
+
   const hasJobDescription = jobDescription.trim().length > 0;
   const sourceOptions = hasJobDescription
     ? ([
@@ -20,9 +27,23 @@ export default function App() {
         { value: "local_heuristic", label: "Local heuristic (resume-only, no API)" },
       ] as const);
 
+  const hasResume = resumeMode === "upload" ? !!pdf : resumeText.trim().length > 0;
+
   const canSubmit = useMemo(() => {
-    return !!pdf && !loading;
-  }, [pdf, loading]);
+    return hasResume && !loading;
+  }, [hasResume, loading]);
+
+  useEffect(() => {
+    const saved = loadBaseResume();
+    if (!saved) return;
+    setResumeMode(saved.source === "upload" ? "upload" : "paste");
+    setResumeText(saved.text);
+    setSavedHint(
+      saved.source === "upload"
+        ? `Restored uploaded resume text from this session (${saved.filename ?? "PDF"}).`
+        : "Restored pasted resume from this session.",
+    );
+  }, []);
 
   useEffect(() => {
     if (hasJobDescription && analysisSource === "local_heuristic") {
@@ -30,20 +51,53 @@ export default function App() {
     }
   }, [analysisSource, hasJobDescription]);
 
+  function persistBaseResume(text: string, source: ResumeMode, filename: string | null) {
+    if (!text.trim()) {
+      clearBaseResume();
+      setSavedHint(null);
+      return;
+    }
+    saveBaseResume({
+      text,
+      filename,
+      source,
+      updatedAt: new Date().toISOString(),
+    });
+    setSavedHint("Base resume saved for this browser session.");
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!pdf) return;
+    if (!hasResume) return;
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const r = await analyzeResume({ pdf, jobDescription, analysisSource });
+      const r = await analyzeResume({
+        pdf: resumeMode === "upload" ? pdf : null,
+        resumeText: resumeMode === "paste" ? resumeText : undefined,
+        jobDescription,
+        analysisSource,
+      });
       setResult(r);
+      const storedText = r.resume_text?.trim() || resumeText.trim();
+      if (resumeMode === "paste") {
+        persistBaseResume(storedText, "paste", null);
+      } else if (pdf && storedText) {
+        persistBaseResume(storedText, "upload", pdf.name);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onPdfSelected(file: File | null) {
+    setPdf(file);
+    if (!file) return;
+    setResumeMode("upload");
+    setSavedHint(null);
   }
 
   return (
@@ -52,8 +106,7 @@ export default function App() {
         <div>
           <h1>JobJeeves</h1>
           <p className="sub">
-            Upload your resume PDF and optionally paste a job description.
-            Get either a job-match analysis or a resume-only review.
+            Set your base resume once (upload or paste), then analyze against any job description.
           </p>
         </div>
       </header>
@@ -62,15 +115,47 @@ export default function App() {
         <section className="card">
           <h2>Analyze</h2>
           <form onSubmit={onSubmit} className="form">
-            <label className="label">
-              Resume PDF
-              <input
-                className="input"
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => setPdf(e.target.files?.[0] ?? null)}
-              />
-            </label>
+            <div className="segment">
+              <button
+                type="button"
+                className={`segment-btn ${resumeMode === "upload" ? "active" : ""}`}
+                onClick={() => setResumeMode("upload")}
+              >
+                Upload PDF
+              </button>
+              <button
+                type="button"
+                className={`segment-btn ${resumeMode === "paste" ? "active" : ""}`}
+                onClick={() => setResumeMode("paste")}
+              >
+                Paste text
+              </button>
+            </div>
+
+            {resumeMode === "upload" ? (
+              <label className="label">
+                Resume PDF
+                <input
+                  className="input"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => onPdfSelected(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            ) : (
+              <label className="label">
+                Base resume
+                <textarea
+                  className="textarea"
+                  value={resumeText}
+                  onChange={(e) => setResumeText(e.target.value)}
+                  placeholder="Paste your full resume text here..."
+                  rows={12}
+                />
+              </label>
+            )}
+
+            {savedHint ? <p className="hint">{savedHint}</p> : null}
 
             <label className="label">
               Job description (optional)
@@ -186,10 +271,9 @@ export default function App() {
 
       <footer className="footer">
         <span className="muted">
-          Tip: scanned/image-only PDFs won’t extract well without OCR.
+          Base resume persists in this browser tab session. PDF uploads still require extractable text.
         </span>
       </footer>
     </div>
   );
 }
-

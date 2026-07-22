@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
@@ -38,21 +39,29 @@ def health():
 async def analyze(
     job_description: str = Form(""),
     analysis_source: str = Form("auto"),
-    file: UploadFile = File(...),
+    resume_text: str = Form(""),
+    file: Optional[UploadFile] = File(None),
     session: Session = Depends(get_session),
 ):
-    if file.content_type not in ("application/pdf", "application/x-pdf", "application/octet-stream"):
-        raise HTTPException(status_code=400, detail="Please upload a PDF.")
+    resume_filename = "resume.txt"
+    normalized_resume_text = resume_text.strip()
 
-    pdf_bytes = await file.read()
-    resume_text = extract_text_from_pdf(pdf_bytes)
-    if not resume_text:
-        raise HTTPException(status_code=400, detail="Could not extract text from PDF (is it scanned/image-only?).")
+    if file is not None and file.filename:
+        if file.content_type not in ("application/pdf", "application/x-pdf", "application/octet-stream"):
+            raise HTTPException(status_code=400, detail="Please upload a PDF.")
+        pdf_bytes = await file.read()
+        extracted = extract_text_from_pdf(pdf_bytes)
+        if not extracted:
+            raise HTTPException(status_code=400, detail="Could not extract text from PDF (is it scanned/image-only?).")
+        normalized_resume_text = extracted
+        resume_filename = file.filename or "resume.pdf"
+    elif not normalized_resume_text:
+        raise HTTPException(status_code=400, detail="Provide a resume PDF upload or pasted resume text.")
 
     try:
         normalized_job_description = job_description.strip()
         result = analyze_resume_vs_job(
-            resume_text=resume_text,
+            resume_text=normalized_resume_text,
             job_description=normalized_job_description,
             analysis_source=analysis_source,
         )
@@ -71,8 +80,8 @@ async def analyze(
         raise HTTPException(status_code=500, detail=f"LLM analysis failed: {e}")
 
     analysis = Analysis(
-        resume_filename=file.filename or "resume.pdf",
-        resume_text=resume_text,
+        resume_filename=resume_filename,
+        resume_text=normalized_resume_text,
         job_description=job_description,
         match_score=int(result.get("match_score", 0)),
         result=result,
@@ -90,6 +99,7 @@ async def analyze(
         improvement_suggestions=list(result.get("improvement_suggestions") or []),
         strengths=list(result.get("strengths") or []),
         short_summary=str(result.get("short_summary") or ""),
+        resume_text=normalized_resume_text,
         raw=result,
     )
 

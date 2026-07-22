@@ -8,6 +8,7 @@ export type AnalyzeResponse = {
   strengths: string[];
   short_summary: string;
   resume_text?: string;
+  tailored_resume?: string;
 };
 
 export async function analyzeResume(params: {

@@ -136,6 +136,16 @@ def analyze_resume_vs_job(
 
     client, model = _build_client_and_model(provider)
 
+    json_keys = """- match_score: integer 0-100
+- missing_keywords: array of strings
+- strengths: array of strings
+- improvement_suggestions: array of strings (concrete resume edits: add bullets, quantify, reorder, projects)
+- short_summary: string (1-3 sentences)"""
+
+    if not is_resume_only:
+        json_keys += """
+- tailored_resume: string (full tailored resume in plain text, ready to copy or save; keep truthful to the source resume, reorder and rephrase bullets for the JD, surface relevant skills/projects, do not invent employers or degrees)"""
+
     user_prompt = f"""
 RESUME:
 {resume_text}
@@ -144,14 +154,10 @@ JOB DESCRIPTION:
 {job_description_clean if job_description_clean else "(none provided)"}
 
 Return JSON with exactly these keys:
-- match_score: integer 0-100
-- missing_keywords: array of strings
-- strengths: array of strings
-- improvement_suggestions: array of strings (concrete resume edits: add bullets, quantify, reorder, projects)
-- short_summary: string (1-3 sentences)
+{json_keys}
 
 Mode instructions:
-- If JOB DESCRIPTION is provided: treat match_score as job fit score, and missing_keywords as JD keywords/skills missing from resume.
+- If JOB DESCRIPTION is provided: treat match_score as job fit score, and missing_keywords as JD keywords/skills missing from resume. tailored_resume must be a complete exportable resume draft.
 - If JOB DESCRIPTION is not provided: treat match_score as overall resume readiness score, and use missing_keywords for important resume keywords/skills likely missing or underemphasized.
 """
 
@@ -176,6 +182,7 @@ Mode instructions:
     data.setdefault("strengths", [])
     data.setdefault("improvement_suggestions", [])
     data.setdefault("short_summary", "")
+    data.setdefault("tailored_resume", "")
     try:
         score = int(data.get("match_score", 0))
     except Exception:

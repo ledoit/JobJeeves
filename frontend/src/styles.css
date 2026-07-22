@@ -134,6 +134,48 @@ h3 {
   cursor: not-allowed;
 }
 
+.button.secondary {
+  border-color: var(--border);
+  background: var(--panel);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.blockHeader h3 {
+  margin: 0;
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tailorOutput {
+  margin: 8px 0 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  max-height: 420px;
+  overflow: auto;
+}
+
 .error {
   border: 1px solid rgba(255, 77, 109, 0.45);
   background: rgba(255, 77, 109, 0.12);

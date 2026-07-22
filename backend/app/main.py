@@ -100,6 +100,7 @@ async def analyze(
         strengths=list(result.get("strengths") or []),
         short_summary=str(result.get("short_summary") or ""),
         resume_text=normalized_resume_text,
+        tailored_resume=str(result.get("tailored_resume") or ""),
         raw=result,
     )
 

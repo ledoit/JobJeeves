@@ -1,6 +1,6 @@
 # JobJeeves — v1 gold path
 
-**Live:** https://jobjeeves-menhir-holdings.vercel.app
+**Live:** https://jobjeeves.koalasalmon.com
 
 ## Happy path
 
